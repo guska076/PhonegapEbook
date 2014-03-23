@@ -3,7 +3,7 @@ Phonegap dla Androida od podstaw
 
 Materiały do e-booka o tworzeniu aplikacji mobilnych na Androida w Phonegap / E-book about phonegap development for Android.
 
-[![PhonegapEbook](cover-mini.jpg)]
+![PhonegapEbook](cover-mini.jpg)
 
 Materiały
 ------------

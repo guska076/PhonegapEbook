@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=320; user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Own Plugin</title>
+	  <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+	  <script type="text/javascript" charset="utf-8" src="notifyme_plugin.js"></script>
+	  <script type="text/javascript" charset="utf-8">
+        var onDeviceReady = function() {
+            document.getElementById("devready").innerHTML = "OnDeviceReady fired.";
+			var button = document.getElementById("button");
+            button.onclick = function() {
+            	window.plugins.NotifyMe.notifyme(
+            			"Tytuł","treść","tekst tickera",
+         			function(val) {
+         				alert(val);
+         			},
+         			function(err) {
+        		        alert(err.toString());
+        		    }
+         		);
+            }
+        };
+
+        function init() {
+            document.addEventListener("deviceready", onDeviceReady, true);
+        }   
+</script>  
+
+  </head>
+  <body onload="init();" id="stage" class="theme">
+    <h2>Minimal AppLaud App</h2>
+
+	<p>Your app goes here.</p>
+	<p>
+    <span id="devready">onDeviceReady not fired.</span>
+    </p>
+	<button id="button">Click</button>
+  </body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=320; user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Czytnik</title>
+	<link rel="stylesheet" href="jquery.mobile/jquery.mobile-1.1.0.css" type="text/css">
+      <script type="text/javascript" src="jquery.mobile/jquery-1.7.2.min"></script>
+      <script type="text/javascript" src="jquery.mobile/jquery.mobile-1.1.0.js"></script>
+	  <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+	  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	  <script type="text/javascript" charset="utf-8">
+	  	google.load("feeds", "1");
+	  	var db;
+        var onDeviceReady = function() {
+        	document.addEventListener("online", checkConnection, false);
+        	document.addEventListener("offline", checkConnection, false);
+         
+        	if(navigator.network.connection.type == Connection.NONE) {
+        		getDataFromDb();
+        	} else {
+        		initialize();
+        	}
+			
+        };
+        
+        function getDataFromDb() {
+        	db.transaction(function(transaction) {
+        		transaction.executeSql(
+        		'SELECT * FROM entries;',
+        		[],
+        		function(transaction, result) {
+        			$('body').append('<div id="progress" style="color: #FFFFFF;position: relative;z-index: 100;margin:10px 0 0 10px;">Loading...</div>');
+        			$("#rss").html('');
+        			var container = $("#rss");
+        			for(var i=0; i < result.rows.length; i++) {
+        				var row = result.rows.item(i);
+        				container.append('<div class="elem" data-role="collapsible" data-content-theme="c"><h3 style="color:#C8C8C8;"> n'+row.title+'</h3><p>'+row.content+'</p></div>');
+        			}
+        			$('#progress').remove();
+        			$('#rss').trigger("create");
+        		},
+        		function() { alert('Error select data from db.'); }
+        		);
+        	});
+        }
+        function checkConnection(e) {
+        	if(e.type == "offline") {
+        		getDataFromDb();
+        	} else {
+        		initialize();
+        	}
+        }
+        
+        function initialize() {
+        	//tworzymy bazę danych
+        	var shortName = 'Czytnik';
+        	var version = '1.0';
+        	var displayName = 'Czytnik';
+        	var maxSize = 65536;
+        	db = openDatabase(shortName, version, displayName, maxSize);
+        	db.transaction(function(transaction) {
+        		transaction.executeSql(
+        		'CREATE TABLE IF NOT EXISTS entries'+
+        		'(title TEXT NOT NULL, '+
+        		'content TEXT NOT NULL, '+
+        		'link TEXT NOT NULL );'
+        		);
+        	});
+        	db.transaction(function(transaction) {
+        		transaction.executeSql(
+        		'DELETE FROM entries;'
+        		);
+        	});
+	       	$('body').append('<div id="progress" style="color: #FFFFFF;position: relative;z-index: 100;margin:10px 0 0 10px;">Loading...</div>'); 
+			var feed = new google.feeds.Feed("https://hacks.mozilla.org/feed/");
+			feed.setNumEntries(6);
+			feed.load(function(result) {
+				  if (!result.error) {
+					    var container = $("#rss"), values = [];
+					    for (var i = 0; i < result.feed.entries.length; i++) {
+						      var entry = result.feed.entries[i];
+					    	  container.append('<div class="elem" data-role="collapsible" data-content-theme="c"><h3>'+entry.title+'</h3><p>'+entry.content+'</p></div>');
+					    	  values.push([entry.title, entry.content, entry.link]);
+					    }
+
+			        	db.transaction(function (transaction){
+			        	    for (var i = 0; i < values.length; i++){
+			        	    	transaction.executeSql(
+				        		'INSERT INTO entries (title, content, link) VALUES (?, ?, ?);',
+				        		[values[i][0], values[i][1], values[i][2]],
+				        		function() {},
+				        		function() { alert('Insert data to db error.'); }
+				        		);
+			        	    }
+			        	});
+					    $('#progress').remove();
+					    $('#rss').trigger("create");
+				  } else {
+					  alert(result.error);
+				  }
+			});
+        }
+        
+        function init() {
+            document.addEventListener("deviceready", onDeviceReady, true);
+        }   
+</script>  
+
+  </head>
+  <body onload="init();" id="stage" class="theme">
+   <div data-role="page" id="page">
+    <div id="header" data-role="header" data-nobackbtn="true"><h2>Czytnik</h2> <span></span></div>
+     <div data-role="content" id="content">
+	<div id="rss"></div>
+    </div>
+	</div>
+  </body>
+</html>

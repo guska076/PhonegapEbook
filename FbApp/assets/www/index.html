@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=320; user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Minimal AppLaud App</title>
+	  <script type="text/javascript" charset="utf-8" src="jquery.mobile/jquery-1.7.2.min"></script>	
+	  <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+	  <script type="text/javascript" charset="utf-8" src="cdv-plugin-fb-connect.js"></script>
+	  <script type="text/javascript" charset="utf-8" src="facebook-js-sdk.js"></script>
+	  <script type="text/javascript" charset="utf-8">
+        var onDeviceReady = function() {
+            FB.init({ 
+            	appId: "APP_ID", 
+            	nativeInterface: CDV.FB, 
+            	useCachedDialogs: false 
+            });
+            
+            FB.login(
+				function(response) {
+					if (response.authResponse) {
+						navigator.camera.getPicture(onSuccess, onFail, { quality: 100,
+			                destinationType: Camera.DestinationType.FILE_URI,
+			                sourceType : Camera.PictureSourceType.PHOTOLIBRARY
+			            });
+					} else {
+						alert('User not logged in');
+					}
+				},
+				{ scope: "email,user_photos,publish_actions,publish_stream" }
+			);
+			
+            function onSuccess(imageData) {
+                window.resolveLocalFileSystemURI(imageData, function(fileSystem) {                       	
+                	var options = new FileUploadOptions();
+                    options.fileKey="file";
+                    options.fileName=fileSystem.name;
+                    options.mimeType="image/jpeg";
+                    
+                    var params = new Object();
+                    params.fullpath = fileSystem.fullPath;
+                    params.name = fileSystem.name;
+
+                    options.params = params;
+                    options.chunkedMode = false;
+                    
+                    $('#feed').html('Uploading...');
+                    var ft = new FileTransfer();
+                    ft.upload(fileSystem.fullPath, "/phonegap_fb/upload.php",
+                        function(result) {
+                			//upload successful
+                        	var wall_post = {
+                           	    message : 'Hello',
+                           	    picture:  '/phonegap_fb/'+fileSystem.name
+                           	};
+                            FB.api('/me/feed', 'post', wall_post, function(response) {
+                           	  if (!response || response.error) {
+
+                           		alert(JSON.stringify(response));
+                           	  } else {
+                           	    alert('Post ID: '+response.id);
+                           	  }
+                           	 $('#feed').html('');
+                           	});
+                        },
+                        function(error) {
+                            //upload unsuccessful, error occured while upload. 
+                        	alert(JSON.stringify(error));
+                        },
+                        options
+                        );
+                });
+            }
+
+            function onFail(message) {
+                alert('Failed because: ' + message);
+            }
+
+        };
+
+        function init() {
+            document.addEventListener("deviceready", onDeviceReady, true);
+        }
+</script>  
+  </head>
+  <body onload="init();" id="stage" class="theme">
+	<div id="feed"></div>
+  </body>
+</html>

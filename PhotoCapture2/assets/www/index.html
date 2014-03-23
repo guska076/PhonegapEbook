@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=320; user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>PhotoCapture</title>
+    <link rel="stylesheet" type="text/css" href="main.css" />
+	  <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+	  <script type="text/javascript" charset="utf-8" src="share_photo_plugin.js"></script>
+	  <script type="text/javascript" charset="utf-8">
+        var onDeviceReady = function() {
+            document.getElementById('take_photo').onclick = function() {
+            	 captureImage();
+            }
+            document.getElementById('share').onclick = function() {
+           	 	shareImage();
+           	}
+        };
+
+        function onSuccess(images) {
+        	var div = document.getElementById('photo'), share_btn = document.getElementById('share');
+        	div.innerHTML = '<img id="img_tag" style="border:1px solid gray; width:50%;" src="'+images[0].fullPath+'" alt="">';
+        	share_btn.style.display='block';
+        }
+
+        function onError(error) {
+           alert('Błąd '+error.code);
+        }
+
+        function captureImage() {
+            navigator.device.capture.captureImage(onSuccess, onError, { limit: 1 });
+        }
+        function shareImage() {
+        	var img_tag_src = document.getElementById('img_tag').src;
+        	window.plugins.SharePhoto.share(
+        			img_tag_src,
+     			function(val) {
+     			},
+     			function(err) {
+    		        alert(err.toString()+' (error)');
+    		    }
+     		);
+        }
+        function init() {
+            document.addEventListener("deviceready", onDeviceReady, true);
+        }   
+</script>  
+  </head>
+  <body onload="init();" id="stage" class="theme">
+	<div id="photo"></div>
+	<button id="take_photo">ZDJĘCIE</button>
+	<button id="share">SHARE</button>
+  </body>
+</html>
